@@ -1,9 +1,10 @@
-from .movements import Espiral, HaciaObjetivo
+from .movements import Espiral, HaciaObjetivo, Quieto
 from .objeto import Objeto
 
 MOVIMIENTOS = {
     "directo": lambda ficha, obtener_objetivo: HaciaObjetivo(obtener_objetivo, ficha["velocidad"]),
     "espiral": lambda ficha, obtener_objetivo: Espiral(obtener_objetivo, ficha["velocidad"], ficha["giro_orbital"]),
+    "quieto": lambda ficha, obtener_objetivo: Quieto(),
 }
 
 

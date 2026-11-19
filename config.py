@@ -53,7 +53,7 @@ FICHAS = {
     "bomba": {
         "radio": 70,             # px, solo dibujo
         "movimiento": "directo",
-        "velocidad": 150,        # px/s
+        "velocidad": 100,        # px/s
         "t_aparecer": 1.0,       # s
         "t_desaparecer": 0.45,   # s
         "cara": "quitar_vida",
@@ -62,6 +62,50 @@ FICHAS = {
         "animaciones": {
             "ACTIVO":         {"carpeta": "normal", "modo": "fija", "giro": 90, "ajustar": True},
             "DESAPARECIENDO": {"carpeta": "salida", "modo": "progreso", "escala": 1.5},
+        },
+    },
+    "manzana": {
+        "radio": 60,
+        "movimiento": "quieto",
+        "velocidad": 0,
+        "t_aparecer": 0.8,
+        "t_desaparecer": 0.4,
+        "cara": None,
+        "palma": "dar_puntos",
+        "animaciones": {
+            "APARECIENDO":    {"carpeta": "aparecer", "modo": "progreso"},
+            "ACTIVO":         {"carpeta": "normal"},
+            "DESAPARECIENDO": {"carpeta": "aparecer", "modo": "progreso", "invertir": True},
+        },
+    },
+    "galaxia": {
+        "radio": 80,
+        "movimiento": "espiral",
+        "velocidad": 35,         # px/s hacia el objetivo
+        "giro_orbital": 40,      # °/s alrededor del objetivo
+        "t_aparecer": 0.5,
+        "t_desaparecer": 0.5,
+        "cara": None,
+        "palma": "eliminar",
+        # mismo giro en todas para que no salte al cambiar de estado
+        "animaciones": {
+            "APARECIENDO":    {"carpeta": "desaparecer", "modo": "progreso", "invertir": True, "giro": 120},
+            "ACTIVO":         {"carpeta": "normal", "giro": 120},
+            "DESAPARECIENDO": {"carpeta": "desaparecer", "modo": "progreso", "giro": 120},
+        },
+    },
+    "corazon": {
+        "radio": 55,
+        "movimiento": "quieto",
+        "velocidad": 0,
+        "t_aparecer": 0.4,
+        "t_desaparecer": 0.4,
+        "cara": None,
+        "palma": "curar",
+        "animaciones": {
+            "APARECIENDO":    {"carpeta": "aparecer", "modo": "progreso"},
+            "ACTIVO":         {"carpeta": "normal"},
+            "DESAPARECIENDO": {"carpeta": "desaparecer", "modo": "progreso"},
         },
     },
 }

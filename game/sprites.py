@@ -9,7 +9,8 @@ class Animacion:
     """Fotogramas de una animación y cómo se dibujan."""
 
     def __init__(self, frames, modo: str = "fija", escala: float = 1.0,
-                 giro: float = 0.0, fps: float = 12.0, ajustar: bool = False):
+                 giro: float = 0.0, fps: float = 12.0, ajustar: bool = False,
+                 invertir: bool = False):
         if modo not in MODOS:
             raise ValueError(f"Modo de animación desconocido: {modo!r} (válidos: {MODOS})")
         self.frames = frames        # BGRA
@@ -18,13 +19,15 @@ class Animacion:
         self.giro = giro            # °/s
         self.fps = fps
         self.ajustar = ajustar      # escala con obj.progreso
+        self.invertir = invertir    # modo progreso al revés
 
     def fotograma(self, edad: float, avance: float):
         n = len(self.frames)
         if self.modo == "bucle":
             i = int(edad * self.fps) % n
         elif self.modo == "progreso":
-            i = min(int(avance * n), n - 1)
+            p = 1.0 - avance if self.invertir else avance
+            i = min(int(p * n), n - 1)
         else:
             i = 0
         return self.frames[i]
