@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from .objects.objeto import Estado
+
 
 def draw_points(frame, points: dict, color=(0, 255, 0), radius=8) -> None:
     for landmark, (x, y) in points.items():
@@ -18,31 +18,25 @@ def draw_hands(frame, hands: dict, radius=4) -> None:
         x, y = puntos[min(puntos)]          # muñeca (HandLandmark.WRIST = 0)
         cv2.putText(frame, etiqueta, (x, y - 15),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
-        
 
 
-def draw_objetos(frame, objetos, sprites):
+
+def draw_objetos(frame, objetos, sprites: dict) -> None:
+    """sprites: {tipo: SpriteTipo}."""
     for obj in objetos:
-        anims = sprites.get(obj.tipo)
-        if anims is None:
+        sprite = sprites.get(obj.tipo)
+        if sprite is None or not obj.vivo:
             continue
-        if obj.estado == Estado.DESAPARECIENDO and "salida" in anims:
-            anim = anims["salida"]
-            img = anim.por_progreso(1 - obj.progreso)
-            tam = int(2 * obj.radio * anim.escala)
-            angulo = 0.0                      # la explosión no gira
-        else:
-            img = anims["normal"].frames[0]
-            tam = int(2 * obj.radio * obj.progreso)
-            angulo = obj.angulo
+        anim = sprite.para(obj.estado.name)
+        img = anim.fotograma(obj.edad, obj.avance)
+        tam = int(2 * obj.radio * anim.escala * (obj.progreso if anim.ajustar else 1.0))
         if tam < 2:
             continue
         img = cv2.resize(img, (tam, tam))
-        if angulo:
-            img = _rotar(img, angulo)
+        if anim.giro:
+            img = _rotar(img, (obj.edad * anim.giro) % 360)
         _pegar(frame, img, *obj.posicion)
 
-        
 
 def _pegar(frame, img, cx, cy):
     h, w = frame.shape[:2]
@@ -60,9 +54,9 @@ def _pegar(frame, img, cx, cy):
 
 def _rotar(img, grados):
     h, w = img.shape[:2]
-    n = int(np.ceil(np.hypot(h, w)))          # 1
-    lienzo = np.zeros((n, n, 4), np.uint8)    # 2
+    n = int(np.ceil(np.hypot(h, w)))
+    lienzo = np.zeros((n, n, 4), np.uint8)
     y0, x0 = (n - h) // 2, (n - w) // 2
-    lienzo[y0:y0 + h, x0:x0 + w] = img        # 3
-    M = cv2.getRotationMatrix2D((n / 2, n / 2), grados, 1.0)   # 4
-    return cv2.warpAffine(lienzo, M, (n, n))                   # 5
+    lienzo[y0:y0 + h, x0:x0 + w] = img
+    M = cv2.getRotationMatrix2D((n / 2, n / 2), grados, 1.0)
+    return cv2.warpAffine(lienzo, M, (n, n))

@@ -1,31 +1,62 @@
-# game/sprites.py
 from pathlib import Path
 
 import cv2
 
+MODOS = ("fija", "bucle", "progreso")
+
 
 class Animacion:
-    def __init__(self, frames, escala=1.0):
-        self.frames = frames  # imágenes BGRA
-        self.escala = escala  # tamaño relativo al radio del objeto
+    """Fotogramas de una animación y cómo se dibujan."""
 
-    def por_progreso(self, p):
-        """p en 0..1 → fotograma correspondiente."""
-        i = min(int(p * len(self.frames)), len(self.frames) - 1)
-        return self.frames[max(i, 0)]
+    def __init__(self, frames, modo: str = "fija", escala: float = 1.0,
+                 giro: float = 0.0, fps: float = 12.0, ajustar: bool = False):
+        if modo not in MODOS:
+            raise ValueError(f"Modo de animación desconocido: {modo!r} (válidos: {MODOS})")
+        self.frames = frames        # BGRA
+        self.modo = modo
+        self.escala = escala
+        self.giro = giro            # °/s
+        self.fps = fps
+        self.ajustar = ajustar      # escala con obj.progreso
+
+    def fotograma(self, edad: float, avance: float):
+        n = len(self.frames)
+        if self.modo == "bucle":
+            i = int(edad * self.fps) % n
+        elif self.modo == "progreso":
+            i = min(int(avance * n), n - 1)
+        else:
+            i = 0
+        return self.frames[i]
 
 
-def cargar_sprites(carpeta: Path, tipo: str, escalas: dict | None = None) -> dict:
-    """Cada subcarpeta de carpeta/<tipo>/ es una animación (el nombre de la carpeta es su nombre)."""
-    escalas = escalas or {}
-    anims = {}
-    for sub in sorted((carpeta / tipo).iterdir()):
-        if not sub.is_dir():
-            continue
-        frames = [cv2.imread(str(r), cv2.IMREAD_UNCHANGED) for r in sorted(sub.glob("*.png"))]
-        if not frames or any(f is None for f in frames):
-            raise FileNotFoundError(f"Fotogramas vacíos o corruptos en {sub}")
-        anims[sub.name] = Animacion(frames, escalas.get(sub.name, 1.0))
-    if "normal" not in anims:
-        raise FileNotFoundError(f"Falta la carpeta 'normal' en {carpeta / tipo}")
-    return anims
+class SpriteTipo:
+    """Estado → Animacion; un estado sin entrada usa la de ACTIVO."""
+
+    def __init__(self, animaciones: dict):
+        if "ACTIVO" not in animaciones:
+            raise ValueError("Cada tipo necesita al menos una animación para el estado ACTIVO")
+        self._animaciones = animaciones
+
+    def para(self, estado: str) -> Animacion:
+        return self._animaciones.get(estado, self._animaciones["ACTIVO"])
+
+
+def cargar_sprites(carpeta: Path, tipo: str, descriptores: dict) -> SpriteTipo:
+    """descriptores = FICHAS[tipo]["animaciones"]."""
+    leidas = {}
+    animaciones = {}
+    for estado, d in descriptores.items():
+        d = dict(d)
+        nombre = d.pop("carpeta")
+        if nombre not in leidas:
+            leidas[nombre] = _leer_frames(carpeta / tipo / nombre)
+        animaciones[estado] = Animacion(leidas[nombre], **d)
+    return SpriteTipo(animaciones)
+
+
+def _leer_frames(ruta: Path) -> list:
+    frames = [cv2.imread(str(r), cv2.IMREAD_UNCHANGED) for r in sorted(ruta.glob("*.png"))]
+    if not frames or any(f is None for f in frames):
+        raise FileNotFoundError(f"Fotogramas vacíos o corruptos en {ruta}")
+    return frames

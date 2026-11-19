@@ -48,22 +48,28 @@ class HandLandmark(IntEnum):
     PINKY_TIP = 20
 
 
+# Un tipo nuevo = una entrada aquí + su carpeta en assets/<tipo>/.
 FICHAS = {
     "bomba": {
-        "imagen": "bomba.png",
-        "radio": 20,
+        "radio": 70,             # px, solo dibujo
+        "movimiento": "directo",
         "velocidad": 150,        # px/s
         "t_aparecer": 1.0,       # s
-        "t_desaparecer": 0.3,    # s
+        "t_desaparecer": 0.45,   # s
         "cara": "quitar_vida",
         "palma": "eliminar",
+        # estado sin entrada → usa la de ACTIVO
+        "animaciones": {
+            "ACTIVO":         {"carpeta": "normal", "modo": "fija", "giro": 90, "ajustar": True},
+            "DESAPARECIENDO": {"carpeta": "salida", "modo": "progreso", "escala": 1.5},
+        },
     },
 }
 
 
 @dataclass(frozen=True)
 class Config:
-    # Modelos (cambia el nombre para usar lite o heavy)
+    # Modelos
     models_dir: Path = BASE_DIR / "models"
     assets_dir: Path = BASE_DIR / "assets"
     model_name: str = "pose_landmarker_full.task"
@@ -71,11 +77,11 @@ class Config:
     hand_model_name: str = "hand_landmarker.task"
     num_hands: int = 2
 
-    # Cámara: resolución que se le pide (la real puede variar)
+    # Cámara (resolución pedida; la real puede variar)
     camera_index: int = 0
     camera_width: int = 1280
     camera_height: int = 720
-    mirror: bool = True           # voltear la imagen como un espejo
+    mirror: bool = True
 
     # Ventana
     window_name: str = "Seminario 3"

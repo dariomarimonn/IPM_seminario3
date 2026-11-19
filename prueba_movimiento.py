@@ -5,9 +5,9 @@ import time
 
 import cv2
 
-from config import config, Landmark
+from config import config, FICHAS, Landmark
 from game import Camera, PoseTracker, cargar_sprites, draw_objetos
-from game.objects.objeto import Objeto
+from game.objeto import Objeto
 from game.movements import HaciaObjetivo
 
 RADIO = 50
@@ -31,7 +31,7 @@ def punto_en_borde(w, h):
 def main():
     cam = Camera(config.camera_index, config.camera_width, config.camera_height, config.mirror)
     pose = PoseTracker(str(config.model_path), config.num_poses)
-    sprites = {"bomba": cargar_sprites(config.assets_dir, "bomba", {"salida": 2.0})}
+    sprites = {"bomba": cargar_sprites(config.assets_dir, "bomba", FICHAS["bomba"]["animaciones"])}
 
     nariz = {"pos": None}
     objeto = None
