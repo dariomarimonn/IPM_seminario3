@@ -3,7 +3,6 @@ from enum import IntEnum
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-ASSETS_DIR: Path = BASE_DIR / "assets"
 
 class Landmark(IntEnum):
     """Índices de MediaPipe Pose usados en el juego."""
@@ -66,6 +65,7 @@ FICHAS = {
 class Config:
     # Modelos (cambia el nombre para usar lite o heavy)
     models_dir: Path = BASE_DIR / "models"
+    assets_dir: Path = BASE_DIR / "assets"
     model_name: str = "pose_landmarker_full.task"
     num_poses: int = 1
     hand_model_name: str = "hand_landmarker.task"

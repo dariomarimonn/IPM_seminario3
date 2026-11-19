@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from .objects.objeto import Estado
 
 def draw_points(frame, points: dict, color=(0, 255, 0), radius=8) -> None:
     for landmark, (x, y) in points.items():
@@ -20,14 +21,28 @@ def draw_hands(frame, hands: dict, radius=4) -> None:
         
 
 
-def draw_objetos(frame, objetos, imagenes):
-    """imagenes: {tipo: imagen BGRA}"""
+def draw_objetos(frame, objetos, sprites):
     for obj in objetos:
-        img = imagenes.get(obj.tipo)
-        tam = int(2 * obj.radio * obj.progreso)
-        if img is None or tam < 2:
+        anims = sprites.get(obj.tipo)
+        if anims is None:
             continue
-        _pegar(frame, cv2.resize(img, (tam, tam)), *obj.posicion)
+        if obj.estado == Estado.DESAPARECIENDO and "salida" in anims:
+            anim = anims["salida"]
+            img = anim.por_progreso(1 - obj.progreso)
+            tam = int(2 * obj.radio * anim.escala)
+            angulo = 0.0                      # la explosión no gira
+        else:
+            img = anims["normal"].frames[0]
+            tam = int(2 * obj.radio * obj.progreso)
+            angulo = obj.angulo
+        if tam < 2:
+            continue
+        img = cv2.resize(img, (tam, tam))
+        if angulo:
+            img = _rotar(img, angulo)
+        _pegar(frame, img, *obj.posicion)
+
+        
 
 def _pegar(frame, img, cx, cy):
     h, w = frame.shape[:2]
@@ -41,3 +56,13 @@ def _pegar(frame, img, cx, cy):
     alfa = sub[:, :, 3:4] / 255.0
     roi = frame[fy0:fy1, fx0:fx1]
     roi[:] = (sub[:, :, :3] * alfa + roi * (1 - alfa)).astype(np.uint8)
+
+
+def _rotar(img, grados):
+    h, w = img.shape[:2]
+    n = int(np.ceil(np.hypot(h, w)))          # 1
+    lienzo = np.zeros((n, n, 4), np.uint8)    # 2
+    y0, x0 = (n - h) // 2, (n - w) // 2
+    lienzo[y0:y0 + h, x0:x0 + w] = img        # 3
+    M = cv2.getRotationMatrix2D((n / 2, n / 2), grados, 1.0)   # 4
+    return cv2.warpAffine(lienzo, M, (n, n))                   # 5

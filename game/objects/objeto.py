@@ -10,10 +10,12 @@ class Estado(Enum):
 
 
 class Objeto:
-    def __init__(self, x: float, y: float, radio: float, t_aparecer: float, t_desaparecer: float, movimiento: str):
+    def __init__(self, x: float, y: float, radio: float, t_aparecer: float, t_desaparecer: float, movimiento: str, tipo=""):
         self.x = float(x)
         self.y = float(y)
         self.radio = radio
+        self.tipo = tipo
+        self.angulo = 0.0
         self._t_aparecer = t_aparecer          # segundos
         self._t_desaparecer = t_desaparecer    # segundos
         self._estado = Estado.APARECIENDO

@@ -6,11 +6,15 @@ import time
 import cv2
 
 from config import config, Landmark
-from game import Camera, PoseTracker
-from game.objects.entities import Objeto
+from game import Camera, PoseTracker, cargar_sprites, draw_objetos
+from game.objects.objeto import Objeto
 from game.movements import HaciaObjetivo
 
-DISTANCIA_IMPACTO = 40  # px
+RADIO = 50
+VELOCIDAD = 150          # px/s
+T_APARECER = 1.0         # s
+T_DESAPARECER = 0.45     # s (13 fotogramas de salida a ~30 FPS)
+DISTANCIA_IMPACTO = 40   # px de la nariz
 
 
 def punto_en_borde(w, h):
@@ -27,6 +31,8 @@ def punto_en_borde(w, h):
 def main():
     cam = Camera(config.camera_index, config.camera_width, config.camera_height, config.mirror)
     pose = PoseTracker(str(config.model_path), config.num_poses)
+    sprites = {"bomba": cargar_sprites(config.assets_dir, "bomba", {"salida": 2.0})}
+
     nariz = {"pos": None}
     objeto = None
     t_prev = time.time()
@@ -49,7 +55,8 @@ def main():
             # 2) lógica
             if objeto is None or not objeto.vivo:
                 x, y = punto_en_borde(w, h)
-                objeto = Objeto(x, y, 20, 1.0, 0.3, HaciaObjetivo(lambda: nariz["pos"], 100))
+                mov = HaciaObjetivo(lambda: nariz["pos"], VELOCIDAD)
+                objeto = Objeto(x, y, RADIO, T_APARECER, T_DESAPARECER, mov, tipo="bomba")
             objeto.actualizar(dt)
 
             if objeto.tocable and nariz["pos"]:
@@ -60,7 +67,7 @@ def main():
             # 3) dibujar
             if nariz["pos"]:
                 cv2.circle(frame, tuple(map(int, nariz["pos"])), 6, (0, 255, 0), -1)
-            cv2.circle(frame, objeto.posicion, max(1, int(20 * objeto.progreso)), (0, 0, 255), -1)
+            draw_objetos(frame, [objeto], sprites)
 
             cv2.imshow(config.window_name, frame)
             if cv2.waitKey(1) & 0xFF == config.exit_key:
