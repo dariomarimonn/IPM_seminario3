@@ -111,6 +111,27 @@ FICHAS = {
 }
 
 
+# Tamaños de las zonas del jugador, en anchos de hombros (área en hombros²). Provisionales: ajustar con cámara.
+ZONAS = {
+    "radio_cara": 0.3,
+    "radio_palma": 0.25,
+    "agujero_area_min": 0.05,    # por debajo: dedos casi juntos
+    "agujero_area_max": 1.5,     # por encima: brazos demasiado abiertos
+    "agujero_lado_min": 0.08,    # lado más corto; evita zonas largas y estrechas
+}
+
+
+# Bonus agujero negro (al coger la galaxia). La imagen se ve solo dentro de la zona de los dedos.
+AGUJERO_NEGRO = {
+    "duracion": 8.0,             # s activo tras coger la galaxia
+    "t_estable": 0.3,            # s que el gesto debe ser válido seguido antes de absorber
+    "opacidad": 0.85,            # 0-1, mezcla de la imagen con la cámara
+    "animaciones": {             # assets/agujero/<carpeta>/
+        "ACTIVO": {"carpeta": "normal", "modo": "bucle", "fps": 4},
+    },
+}
+
+
 @dataclass(frozen=True)
 class Config:
     # Modelos

@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+from ..zonas import Circulo, Poligono
+
 
 def draw_points(frame, points: dict, color=(0, 255, 0), radius=8) -> None:
     for landmark, (x, y) in points.items():
@@ -20,7 +22,6 @@ def draw_hands(frame, hands: dict, radius=4) -> None:
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
 
-
 def draw_objetos(frame, objetos, sprites: dict) -> None:
     """sprites: {tipo: SpriteTipo}."""
     for obj in objetos:
@@ -36,6 +37,43 @@ def draw_objetos(frame, objetos, sprites: dict) -> None:
         if anim.giro:
             img = _rotar(img, (obj.edad * anim.giro) % 360)
         _pegar(frame, img, *obj.posicion)
+
+
+def draw_zonas(frame, zonas, color=(255, 200, 0), grosor=2) -> None:
+    """Dibuja el contorno de cada zona; la función se elige por la forma (sin if por tipo)."""
+    for zona in zonas:
+        _DIBUJAR_ZONA[type(zona)](frame, zona, color, grosor)
+
+
+def _dibujar_circulo(frame, zona, color, grosor):
+    cx, cy = zona.centro
+    cv2.circle(frame, (int(cx), int(cy)), int(zona.radio), color, grosor)
+
+
+def _dibujar_poligono(frame, zona, color, grosor):
+    pts = np.array(zona.vertices, np.int32).reshape(-1, 1, 2)
+    cv2.polylines(frame, [pts], True, color, grosor)
+
+
+_DIBUJAR_ZONA = {Circulo: _dibujar_circulo, Poligono: _dibujar_poligono}
+
+
+def draw_imagen_en_zona(frame, zona, img, opacidad=1.0) -> None:
+    """Efecto ventana: la imagen ocupa toda la pantalla, fija, y solo se ve dentro del polígono."""
+    h, w = frame.shape[:2]
+    pts = np.array(zona.vertices, np.int32)
+    x0, y0 = np.maximum(pts.min(axis=0), 0)
+    x1, y1 = np.minimum(pts.max(axis=0) + 1, (w, h))
+    if x0 >= x1 or y0 >= y1:
+        return
+    fondo = cv2.resize(img, (w, h))[y0:y1, x0:x1]
+    mascara = np.zeros((y1 - y0, x1 - x0), np.float32)
+    cv2.fillPoly(mascara, [pts - (x0, y0)], 1.0)
+    alfa = mascara[:, :, None] * opacidad
+    if fondo.shape[2] == 4:
+        alfa = alfa * (fondo[:, :, 3:4] / 255.0)
+    roi = frame[y0:y1, x0:x1]
+    roi[:] = (fondo[:, :, :3] * alfa + roi * (1 - alfa)).astype(np.uint8)
 
 
 def _pegar(frame, img, cx, cy):
