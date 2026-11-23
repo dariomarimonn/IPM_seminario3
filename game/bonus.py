@@ -1,14 +1,16 @@
-"""Bonus agujero negro: mientras está activo, la zona de los dedos absorbe los objetos que entran.
+"""Bonus temporal: mientras está activo, su zona del jugador absorbe los objetos que entran.
 
+Lo usan el agujero negro (cuadrilátero de los dedos) y la barrera (segmento entre las palmas).
 Lógica pura (sin OpenCV ni config): recibe la zona del frame y la lista de objetos.
 """
 import math
 
 
-class AgujeroNegro:
-    def __init__(self, duracion: float | None, t_estable: float):
+class Bonus:
+    def __init__(self, duracion: float | None, t_estable: float = 0.0, solo_amenazas: bool = False):
         self._duracion = duracion        # None = permanente
-        self._t_estable = t_estable
+        self._t_estable = t_estable      # s que el gesto debe ser válido seguido antes de absorber
+        self.solo_amenazas = solo_amenazas   # el motor decide qué es una amenaza
         self._restante = 0.0
         self._valido = 0.0               # s seguidos con el gesto válido
         self.edad = 0.0                  # s desde que se activó (para la animación)
@@ -22,13 +24,20 @@ class AgujeroNegro:
     def restante(self) -> float:
         return self._restante
 
+    @property
+    def fraccion(self) -> float:
+        """Parte de la duración que queda (0-1); 1 si es permanente."""
+        if self._duracion is None:
+            return 1.0 if self.activo else 0.0
+        return max(0.0, self._restante / self._duracion)
+
     def activar(self) -> None:
-        """Al coger la galaxia. Si ya estaba activo, reinicia la duración."""
+        """Al coger su objeto. Si ya estaba activo, reinicia la duración."""
         self._restante = math.inf if self._duracion is None else self._duracion
         self.edad = 0.0
 
     def actualizar(self, dt: float, zona) -> None:
-        """zona: el Poligono de los dedos de este frame, o None si el gesto no es válido."""
+        """zona: la zona de este frame, o None si el gesto no es válido."""
         self._restante -= dt
         self.edad += dt
         if not self.activo:

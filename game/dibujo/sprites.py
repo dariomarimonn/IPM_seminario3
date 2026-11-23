@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import cv2
+import numpy as np
 
 MODOS = ("fija", "bucle", "progreso")
 
@@ -56,6 +57,20 @@ def cargar_sprites(carpeta: Path, tipo: str, descriptores: dict) -> SpriteTipo:
             leidas[nombre] = _leer_frames(carpeta / tipo / nombre)
         animaciones[estado] = Animacion(leidas[nombre], **d)
     return SpriteTipo(animaciones)
+
+
+def icono(img, lado: int):
+    """La imagen recortada a su parte visible, centrada en un cuadrado y escalada a `lado` px.
+    Para el HUD: el margen transparente de los sprites haría el dibujo más pequeño que `lado`."""
+    ys, xs = np.nonzero(img[:, :, 3])
+    if not len(xs):
+        raise ValueError("La imagen no tiene nada visible")
+    recorte = img[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    h, w = recorte.shape[:2]
+    n = max(h, w)
+    cuadrado = np.zeros((n, n, 4), np.uint8)
+    cuadrado[(n - h) // 2:(n - h) // 2 + h, (n - w) // 2:(n - w) // 2 + w] = recorte
+    return cv2.resize(cuadrado, (lado, lado), interpolation=cv2.INTER_AREA)
 
 
 def _leer_frames(ruta: Path) -> list:
