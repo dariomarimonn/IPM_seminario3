@@ -118,6 +118,9 @@ ZONAS = {
     "agujero_area_min": 0.05,    # por debajo: dedos casi juntos
     "agujero_area_max": 1.5,     # por encima: brazos demasiado abiertos
     "agujero_lado_min": 0.08,    # lado más corto; evita zonas largas y estrechas
+    "barrera_grosor": 0.08,      # media anchura del segmento entre las palmas
+    "juntas_radio": 0.3,         # círculo entre las palmas para coger con las dos manos
+    "juntas_max": 0.8,           # solo existe si los centros de las palmas están a menos de esto
 }
 
 

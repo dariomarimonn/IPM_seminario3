@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from ..zonas import Circulo, Poligono
+from ..zonas import Circulo, Poligono, Segmento
 
 
 def draw_points(frame, points: dict, color=(0, 255, 0), radius=8) -> None:
@@ -55,7 +55,13 @@ def _dibujar_poligono(frame, zona, color, grosor):
     cv2.polylines(frame, [pts], True, color, grosor)
 
 
-_DIBUJAR_ZONA = {Circulo: _dibujar_circulo, Poligono: _dibujar_poligono}
+def _dibujar_segmento(frame, zona, color, grosor):
+    """Con grosor < 0, la cápsula entera (el ancho real de la zona); si no, una línea de ese grosor."""
+    a, b = tuple(map(int, zona.a)), tuple(map(int, zona.b))
+    cv2.line(frame, a, b, color, max(1, int(2 * zona.grosor)) if grosor < 0 else grosor, cv2.LINE_AA)
+
+
+_DIBUJAR_ZONA = {Circulo: _dibujar_circulo, Poligono: _dibujar_poligono, Segmento: _dibujar_segmento}
 
 
 def draw_imagen_en_zona(frame, zona, img, opacidad=1.0) -> None:
